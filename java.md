@@ -472,7 +472,7 @@ final修饰符
 > - 无法命名构造器, 构造器的名字必须与类名相同
 > - 使用构造器时无法改变构造对象的类型
 
-abstract修饰符
+**abstract修饰符**
 
 - 抽象方法, 相当于一个约束, 约束子类必须实现方法. 抽象方法不能同时与static和final存在
 - 包含抽象方法的类要被声明为抽象类, 抽象类不能用来实例化对象, 也不能被final修饰.
@@ -481,7 +481,7 @@ abstract修饰符
 
 ## 类型检查, 类型转换
 
-**instanceof**关键字用来检查类型
+**instanceof**关键字用来检查类型, instanceof不仅能检查继承的实例关系, 还能检查接口实现的关系.
 
 ```java
 public class Main {
@@ -974,4 +974,403 @@ enum Size {
     }
 }
 ```
+
+## 接口
+
+一个类可以实现一个或多个接口,并在需要接口的地方,随时使用实现了相应接口的对象. 抽象类可以认为是对子类的约束, 而接口相当于对类的拓展, **实现了某个接口就必须实现该接口规定的方法**
+
+```java
+interface SayHello{
+    void hello(); // 注意千万不要带{}, 带{}就相当于实现了一个没有方法体的方法
+}
+
+interface SayBye{
+    void bye(); // 注意千万不要带{}, 带{}就相当于实现了一个没有方法体的方法
+}
+
+class Hello implements SayHello,SayBye{
+    @Override
+    public void hello() {
+        System.out.println("哈哈哈");
+    }
+    
+    public void bye(){
+        System.out.println("拜拜");
+    }
+}
+
+public class Main {
+    public static void main(String[] args)  {
+        Hello obj = new Hello();
+        sayhaha(obj);
+    }
+
+    static void sayhaha(SayHello obj){
+        obj.hello();
+    }
+}
+```
+
+接口中的所有方法自动的属于public, 所以在接口的方法声明中,不必提供关键字public.但是在实现接口时, 必须把方法声明为public. 否则会认为这个方法的访问属性时包可见性.
+
+#### 接口中可以可以定义常量
+
+接口中可以定义常量, 但是绝对不能含有实例域. 在java8之后, 接口中已经可以实现简单的方法了, 但是这些方法不能引用实例域.
+
+```java
+interface SayHello{
+    double SPEED_LIMIT = 99;
+    void hello(); // 注意千万不要带{}, 带{}就相当于实现了一个没有方法体的方法
+}
+
+class Hello implements SayHello{
+    @Override
+    public void hello() {
+        System.out.println("哈哈哈");
+        System.out.println(this.SPEED_LIMIT); //99.0
+    }
+}
+```
+
+java8中允许接口中有静态方法. 但是通常的做法是将静态方法放在伴随类中
+
+另外, 还可以为接口方法提供一个默认方法, 必须用default修饰符标记
+
+```java
+interface SayHello{
+    double SPEED_LIMIT = 99;
+    default void hello(){
+        System.out.println("你怎么不自己写这个方法");
+    }; // 注意千万不要带{}, 带{}就相当于实现了一个没有方法体的方法
+}
+
+
+class Hello implements SayHello{
+
+}
+
+public class Main {
+    public static void main(String[] args)  {
+        Hello obj = new Hello();
+        sayhaha(obj);
+    }
+
+    static void sayhaha(SayHello obj){
+        obj.hello();
+    }
+}
+```
+
+这样一来, 在超类, 超接口, 和默认方法就有冲突了, 那么那个会先执行呢???
+
+首先, 自己实现了这个方法, 毫无疑问, 调用的是自己的那个方法
+
+```java
+interface Say{
+    default void hello(){
+        System.out.println("Say接口的hello");
+    };
+}
+
+interface SayHello extends Say{
+    default void hello(){
+        System.out.println("SayHello接口的hello");
+    };
+}
+
+class PrentHello{
+    public void hello(){
+        System.out.println("PrentHello类的hello");
+    }
+}
+
+class Hello extends PrentHello implements SayHello{
+    public void hello(){
+        System.out.println("Hello类的hello");
+    }
+}
+
+public class Main {
+    public static void main(String[] args)  {
+        Hello obj = new Hello();
+        obj.hello();
+    }
+```
+
+我们去掉自己的实现, 这次调用的父类的方法, 我们后面去掉父类的方法
+
+```java
+interface Say{
+    default void hello(){
+        System.out.println("Say接口的hello");
+    };
+}
+
+interface SayHello extends Say{
+    default void hello(){
+        System.out.println("SayHello接口的hello");
+    };
+}
+
+class PrentHello{
+    public void hello(){
+        System.out.println("PrentHello类的hello");
+    }
+}
+
+class Hello extends PrentHello implements SayHello{
+    
+}
+
+public class Main {
+    public static void main(String[] args)  {
+        Hello obj = new Hello();
+        obj.hello();
+    }
+```
+
+去掉了本类,和父类的方法, 这次执行的是直接继承的接口的方法
+
+```java
+interface Say{
+    default void hello(){
+        System.out.println("Say接口的hello");
+    };
+}
+
+interface SayHello extends Say{
+    default void hello(){
+        System.out.println("SayHello接口的hello");
+    };
+}
+
+class PrentHello{
+
+}
+
+class Hello extends PrentHello implements SayHello{
+
+}
+
+public class Main {
+    public static void main(String[] args)  {
+        Hello obj = new Hello();
+        obj.hello();
+    }
+    
+}
+```
+
+接口冲突, 如果两个接口中都实现了一个方法(相同签名)
+
+```java
+interface Say{
+    default void hello(){
+        System.out.println("Say接口的hello");
+    };
+}
+
+interface SayHello{
+    default void hello(){
+        System.out.println("SayHello接口的hello");
+    };
+}
+
+class Hello implements SayHello,Say{
+
+}
+```
+
+向上面这种java并不知道要选择那个接口, 所以在编译时会提示一个异常, 这时我们就需要在Hello类中在这两个冲突的方法中选择一个了
+
+```java
+class Hello implements SayHello,Say{
+    public void hello(){
+        SayHello.super.hello();
+    };
+}
+```
+
+**接口的继承** -- extends
+
+## lambda表达式
+
+在介绍lambda表达式之前要先介绍两个接口, 一个是**Comparable**接口, 另一个是**Comparator**接口.
+
+实现了Comparable接口就可以通过Arrays接口进行排序
+
+Comparable接口中的compareTo将两个对象进行比较, 如果这个对象小于other返回负值.相等返回0, 否则返回正值. 这样在sort排序时会得到一个**升序**的结果
+
+```java
+import java.util.Arrays;
+
+
+class Employee implements Comparable {
+    private String name;
+    private double salary;
+
+    @Override
+    public int compareTo(Object otherObject) {
+        Employee other = (Employee) otherObject;
+        return (int) (this.salary - other.salary);
+    }
+
+    public Employee(String name,double salary){
+        this.salary = salary;
+        this.name = name;
+    }
+    @Override
+    public String toString(){
+        return this.name + this.salary;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Employee[] employees  = new Employee[3];
+        Employee e1 = new Employee("刚刚",1);
+        Employee e2 = new Employee("微微",500);
+        Employee e3 = new Employee("雯雯",1000);
+        employees[0] = e3;
+        employees[1] = e1;
+        employees[2] = e2;
+        Arrays.sort(employees);
+        for (Employee a : employees){
+            System.out.println(a);
+        }
+    }
+}
+```
+
+**Comparator**是一个比较器, 对于一些内置的类型, 没有实现Comparable接口, 不能进行比较. 这是就可以通过比较器来排序了, 比如要来一个按字符串长度进行排序
+
+```java
+class ByName implements Comparator{
+    @Override
+    public int compare(Object first,Object other){
+        String f = ((Employee)first).getName();
+        String o = ((Employee)other).getName();
+        return f.length() - o.length();
+    }
+}
+
+class Employee {
+    private String name;
+    private double salary;
+
+    public Employee(String name,double salary){
+        this.salary = salary;
+        this.name = name;
+    }
+    @Override
+    public String toString(){
+        return this.name + this.salary;
+    }
+
+    public String getName(){
+        return this.name;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Employee[] employees  = new Employee[3];
+        Employee e1 = new Employee("飞翔的企鹅",1);
+        Employee e2 = new Employee("周树人",500);
+        Employee e3 = new Employee("雷雷",1000);
+        employees[0] = e3;
+        employees[1] = e1;
+        employees[2] = e2;
+        Comparator byname = new ByName();
+        Arrays.sort(employees,byname);
+        for (Employee a : employees){
+            System.out.println(a);
+        }
+    }
+}
+```
+
+这时,我们再来说lambda表达式
+
+```java
+// 形式
+() -> {} 
+```
+
+在()中放置的是参数, {}中是包含return的方法体. 即使没有参数也要提供空的()
+
+无需指定lambda表达式的返回类型, 返回类型会由上下文推导得出.
+
+#### 函数式接口
+
+对于**只有一个抽象方法**的接口, 需要这种**接口对象**时, 就可以提供一个lambda表达式, 这种接口称之为函数式接口, 比如**Comparator**, 我们来修改前面的那个代码
+
+```java
+Arrays.sort(employees,(Employee a,Employee b) ->{return a.getName().length()-b.getName().length();});
+```
+
+**在java中lambda表达式所能做的也只是转换为函数式接口**
+
+ #### 方法引用
+
+有时, 可能已经有**现成的方法**可以完成你想要传递到其他某个代码的动作.
+
+```java
+class Employee {
+    private String name;
+    private double salary;
+
+    public int comparaTo(Employee other){
+        return (int)(this.salary - other.salary);
+    }
+
+    public Employee(String name,double salary){
+        this.salary = salary;
+        this.name = name;
+    }
+    @Override
+    public String toString(){
+        return this.name + this.salary;
+    }
+
+    public String getName(){
+        return this.name;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Employee[] employees  = new Employee[3];
+        Employee e1 = new Employee("飞翔的企鹅",1);
+        Employee e2 = new Employee("周树人",500);
+        Employee e3 = new Employee("雷雷",1000);
+        employees[0] = e3;
+        employees[1] = e1;
+        employees[2] = e2;
+        Arrays.sort(employees,Employee::comparaTo); // 注意这里
+        for (Employee a : employees){
+            System.out.println(a);
+        }
+    }
+
+}
+```
+
+从上面可以看出要用::分割方法名与对象或类名.主要有三种情况
+
+- obj::instanceMethod
+- class:: staticMethod
+- class:: instanceMethod
+
+前两种相当于提供了方法参数的lambda表达式, 比如Math::pow等价于(x,y)->Math.pow(x,y)
+
+第三种情况, 就是上面演示的那个, 第一个参数会变成方法的调用者Employee::comparaTo等价于(x,y)->x.comparaTo(y)
+
+**方法引用中可以使用this和super, super会去调用超类的方法**
+
+#### 构造器引用
+
+构造器引用和方法引用很类似, 只不过方法名为new
+
+例如int[]::new是一个构造器引用,他有一个参数:即数组的长度.这相当于x->new int[x]
 
