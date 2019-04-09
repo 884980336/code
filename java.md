@@ -1374,3 +1374,252 @@ public class Main {
 
 例如int[]::new是一个构造器引用,他有一个参数:即数组的长度.这相当于x->new int[x]
 
+>如果设计你自己的接口,其中只有一个抽象方法, 可以用@FunctionalInterface注解来标记这个接口.这样做有两个优点. 如果你无意增加了另一个非抽象方法, 编译器会产生一个错误信息
+
+#### 其他
+
+lambda表达式可以捕获外围作用域中变量的值, 但是这里有一个限制, 只能引用值不会改变的量, 不能在lambda内部改变,也不能在外部改变. lambda引用的外部变量必须是最终变量
+
+在一个lambda表达式中使用this关键字, 是指创建这个lambda表达式的方法的this
+
+## 内部类
+
+**内部类**是定义在另一个类中的类. 他有以下几种特性
+
+- 内部类的方法可以访问该类定义所在的作用域中的数据, 包括私有数据
+- 内部类可以对同一个包中的其他类隐藏起来
+- 当想要定义一个回调函数且不想编写大量代码时, 使用匿名内部类比较便捷 
+
+#### 内部类引用外部作用域的例子
+
+```java
+class Outer {
+    private int salary;
+    private String name;
+
+    public Outer(String name, int salary){
+        this.name = name;
+        this.salary = salary;
+    }
+
+    public void start() {
+        Inner a = new Inner();
+        a.conlse();
+    }
+
+    public class Inner {
+        public void conlse() {
+            System.out.println(name);
+        }
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) {
+        Outer o = new Outer("刚刚",666);
+        o.start();
+    }
+
+}
+```
+
+其实上面console方法里就相当于`System.out.println(Outer.this.name);`, `OuterClass.this`就是外部类的实例
+
+#### 构造内部类
+
+在外部类内部实例化时可以直接用new, 也可以使用this.new
+
+```java
+public void start() {
+    Inner a = this.new Inner();
+    a.conlse();
+}
+```
+
+this不是必须的不过可以通过显示的命名将外围类引用设置为其他的对象.
+
+```java
+Outer o = new Outer("刚刚",666);
+Outer.Inner  i = o.new Inner();
+i.conlse();
+```
+
+首先内部类是共有的, 其次该类的类型是Outer.Inner
+
+> 内部类中声明的所有**静态域**都必须是final, 我们希望一个静态域只有一个实例, 不过对于每个外部对象, 会分别有一个单独的内部类实例,  如果这个域不是final, 他可能就不是唯一的.
+>
+> 内部类不能有static方法
+
+#### 局部内部类
+
+当一个内部类只在创建这个类型对象的时候使用了一次, 可以在这个方法中定义局部类,
+
+```java
+class Outer {
+    private int salary;
+    private String name;
+
+    public Outer(String name, int salary){
+        this.name = name;
+        this.salary = salary;
+    }
+
+    public void start() {
+        class Inner {
+            public void conlse() {
+                System.out.println(Outer.this.name);
+            }
+        }
+
+        Inner a = new Inner();
+        a.conlse();
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) {
+        Outer o = new Outer("刚刚",666);
+        o.start();
+    }
+
+}
+```
+
+局部类不能用public或private访问修饰符进行修饰, 他的作用域被限定在声明这个类的局部块中.  局部类有一个优势, 他对外部世界可以完全的隐藏起来, 除了start方法, 没有任何方法知道Inner类的存在
+
+局部类还有一个优点, 他除了能够访问包含他的外部类还可以访问局部变量,  不过那些局部变量必须声明为final
+
+```java
+class Outer {
+    private int salary;
+    private String name;
+
+    public Outer(String name, int salary){
+        this.name = name;
+        this.salary = salary;
+    }
+
+    public void start(String str) {
+
+        class Inner {
+            public void conlse() {
+                System.out.println(str); // 看这里
+            }
+        }
+
+
+        Inner a = new Inner();
+        a.conlse();
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) {
+        Outer o = new Outer("刚刚",666);
+        o.start("哈哈哈");
+    }
+
+}
+```
+
+#### 匿名内部类
+
+将局部内部类在深入一步. 假如之创建这个类的一个对象, 就不必命名了.这种类称为匿名内部类
+
+```java
+Inner a = new Inner() {
+    public void conlse() {
+        System.out.println(str);
+    }
+};
+```
+
+Inner可以是一个接口, 内部类要实现这个接口. 也可以是一个类, 内部类来拓展他
+
+匿名内部类没有名字,所以不能够有构造方法, 这里的参数将传给父类
+
+#### 静态内部类
+
+有时候使用内部类只是为了把一个类隐藏在另一个类的内部, 并不需要内部类引用外围类的对象. 这是可以把内部类声明为static
+
+## 异常
+
+在java中异常对象都是派生于Throwable类的一个实例. 在下一层分解为两个分支Error和Exception
+
+我们只需要关注Exception层次结构,  
+
+在Exception又分为RuntimeException和IOException, RuntimeException和Error称为非受查异常.
+
+一个方法必须声明所有可能抛出的受查异常, 而非受查异常要么不可控制, 要么就应该避免发生
+
+#### 声明受查异常
+
+方法应该在首部声明其所有可能抛出的异常. 前面说到的**throws**就是这个意思. 他可以在首部反映出这个方法可能抛出哪类受查异常.
+
+一个方法调用另外一个方法, 如果另一个方法声明了异常,而在这个方法中没有处理, 那么在这个方法中也应该声明这个异常, 以下的这些异常都是其他方法中的
+
+```java
+public class Main {
+    public static void main(String[] args) throws
+            InvocationTargetException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, SecurityException, ClassNotFoundException {
+        Class c = Class.forName("Person");
+        Person P = new Person("刚刚", "19");
+        Method M = c.getMethod("getName");
+        System.out.println(M.invoke(P)); // 刚刚
+    }
+}
+```
+
+#### 抛出异常
+
+以IOException为例, throw关键字用来抛出异常对象
+
+```java
+class Outer {
+    private int salary;
+    private String name;
+
+    public Outer(String name, int salary){
+        this.name = name;
+        this.salary = salary;
+    }
+
+    public void start(String str) throws IOException {
+        throw new IOException();
+    }
+
+
+}
+
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Outer o = new Outer("刚刚",666);
+        o.start("哈哈哈");
+    }
+
+}
+```
+
+o.start("哈哈哈")这里代码便停止运行了, 这里有几个需要注意的点
+
+- 抛出异常的方法应该声明受查异常
+- 如果在main方法里没有处理这个异常, 也应该声明这个异常, 不顾上面用了Exception
+- IOException类有一个含有一个字符串类型参数的构造器, 用来更加细致的描述异常出现的情况
+
+```java
+throw new IOException("我自己抛个异常咋啦");
+// Exception in thread "main" java.io.IOException: 我自己抛个异常咋啦
+```
+
+#### 创建异常类
+
+#### 捕获异常
+
+
+
+
+
