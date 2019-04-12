@@ -1617,9 +1617,203 @@ throw new IOException("我自己抛个异常咋啦");
 
 #### 创建异常类
 
+创建异常类需要继承Exception或者Exception的子类, 定义的类应包含两个构造器有个是默认构造器, 一个是带有详细描述信息的构造器(超类Throwable的ToString方法会打印这些信息)
+
+```java
+class MyError extends Exception {
+    public MyError(){}
+    public MyError(String str){
+        super(str);
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        throw new MyError();
+    }
+
+}
+```
+
 #### 捕获异常
 
+要想捕获一个异常就必须设置try/catch语句块
 
+如果try语句块中的任何代码抛出了一个在catch子句中说明的异常类,那么程序将进入catch处理器执行
 
+如果try语句没有抛出异常, 程序将跳过catch语句
 
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        try{
+            throw new MyError("我报个错咋啦");
+        }catch (MyError e){
+            System.out.println(e.toString());
+        }
+    }
+}
+```
+
+try后面可以跟多个cathch用来处理不同的异常类型
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        try{
+            test();
+        }catch (MyError e){
+            System.out.println(e.toString());
+        }catch (IOException e){
+            System.out.println(e.toString());
+        }
+    }
+    static void test() throws IOException, MyError{   
+    }
+}
+```
+
+在javaSE7之后也可以这样在一个catch中捕获多个类型的异常
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        try{
+            test();
+        }catch (MyError|IOException e){
+            System.out.println(e.toString());
+        }
+    }
+
+    static void test() throws IOException, MyError{
+
+    }
+
+}
+```
+
+异常有两个方法可以用来设置异常原因和获取异常原因, 常用与异常处理的再次抛出
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        try{
+            test();
+        }catch (MyError e){
+           System.out.print(e.getCause());
+        }
+    }
+
+    static void test() throws MyError {
+        try{
+            test1();
+        }catch (IOException e){
+            MyError se = new MyError();
+            se.initCause(e);
+            throw se;
+        }
+
+    }
+    static void test1() throws IOException{
+        throw new IOException();
+    }
+
+}
+```
+
+finally子句, finally子句的代码无论是否有异常被捕获,都会执行, 不过要注意finally里不要包含return语句,  他会覆盖原来的返回值
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        System.out.print(test());
+    }
+
+    static int test() throws MyError {
+        try{
+            int r = 1+1;
+            return r;
+        }finally {
+            return 0;
+        }
+    }
+}
+```
+
+但是如果finally块中也抛出了异常,那么原来的异常就会丢失, 如果想做适当的处理抛出原来的异常, 代码就会变得极其繁琐
+
+#### 带资源的try语句
+
+假设资源属于一个实现了AutoCloseable接口的类, java SE7为这种代码块提供了一个很有用的快捷方式
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        try(Scanner in = new Scanner(new FileInputStream("aa"))){
+            while (in.hasNext()){
+                System.out.print(in.next());
+            }
+        }
+    }   
+}
+```
+
+AutoCloseable接口有一个close方法,当try块退出时,会自动调用in.close()
+
+try后可以跟多个资源;隔开, 
+
+## 断言
+
+不解释了
+
+```java
+assert 条件;
+```
+
+默认情况下,断言被禁用, 可以在运行程序时用-ea选项启用
+
+## 泛型
+
+泛型程序设计意味着编写的代码可以被很多不同类型的对象所重用
+
+#### 泛型类
+
+一个泛型类就是具有一个或多个类型变量的类,
+
+```java
+class Pair<T>{
+    private T a;
+    private T b;
+    
+    public Pair(){}
+    public Pair(T a,T b){
+        this.a = a;
+        this.b = b;
+    }
+
+    public T getA() {
+        return a;
+    }
+
+    public T getB() {
+        return b;
+    }
+}
+```
+
+这个类有一个类型变量T, 当然这里可以由多个, 使用逗号隔开
+
+用具体的类型替换类型变量就可以实例化泛型类型
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Pair a = new Pair<String>("我", "好");
+        System.out.println(a.getA());
+        Pair b = new Pair<Integer>(1, 2);
+        System.out.println(b.getA());
+    }
+}
+```
 
