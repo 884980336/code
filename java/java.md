@@ -1802,7 +1802,7 @@ class Pair<T>{
 }
 ```
 
-这个类有一个类型变量T, 当然这里可以由多个, 使用逗号隔开
+**这个类有一个类型变量T, 当然这里可以由多个, 使用逗号隔开**
 
 用具体的类型替换类型变量就可以实例化泛型类型
 
@@ -1817,3 +1817,32 @@ public class Main {
 }
 ```
 
+#### 泛型方法
+
+简单的方法也可以带有类型参数
+
+```java
+class ArrayAlg{
+    public static <T> T getMiddle(T... a){
+        return a[a.length/2];
+    }
+}
+```
+
+泛型方法可以定义在泛型类中, 也可以定义在普通类中, 当调用一个泛型方法时,在方法名前的尖括号中放入具体的类型
+
+```java
+        String a =  ArrayAlg.<String>getMiddle("哈哈","嘻嘻","吼吼","嘿嘿");
+        System.out.println(a);
+```
+
+大多数情况下方法调用中可以省略<String>类型参数, 编译器能够推断出所调用的方法
+
+```java
+        String a =  ArrayAlg.getMiddle("哈哈","嘻嘻","吼吼","嘿嘿");
+        System.out.println(a);
+```
+
+#### 类型变量的限定
+
+有时类或方法需要对类型变量进行约束
