@@ -521,6 +521,8 @@ Object方法中的equals方法检查一个对象是否等于另一个对象, 在
 
 > == 对于对象来说比较的是内存地址, 对基本数据类型来说比较的是值###
 
+
+
 **必须覆盖**
 
 在子类中写的equals方法如果接受的参数与object类中接受的类型不同, 就不会覆盖Object类的equals方法, 而是重载了一个无关的方法
@@ -892,6 +894,27 @@ public class Main {
     }
 }
 ```
+
+例:
+
+```java
+class Tank{
+    float a;
+}
+public class main {
+    public static void main(String[] args){
+        Tank a = new Tank();
+        Tank b = new Tank();
+        a.a = 1.1f; // 小数的字面量是double类型, 带f的才是float类型
+        b.a = 1.2f;
+        System.out.println(a.a+"+"+b.a);
+    }
+}
+```
+
+
+
+
 
 ## 枚举类
 
